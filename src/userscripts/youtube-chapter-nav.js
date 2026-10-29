@@ -2,13 +2,14 @@
  * Chapter navigation for YouTube watch pages.
  *
  * Adds a previous/next button to the left and right edges of the player. They
- * appear on hover, seek to the start of the adjacent chapter, and disable when
- * there is nothing to jump to. The buttons are deliberately thin: chapter
- * changes and seeking stay YouTube's job, this only picks the target time.
+ * appear on hover and seek to the adjacent chapter. At the boundaries the user
+ * still gets a useful action instead of a dead button: previous replays the
+ * first chapter, next jumps to the end of the video.
  *
- * Chapter data comes from the player response, which is per-video and survives
- * SPA navigation. `ytInitialData` is the fallback for the first paint, before
- * the player has a response.
+ * Chapter data is read from `ytd-app`'s page data, which YouTube refreshes on
+ * SPA navigation. The player response on live pages does not carry the chapter
+ * overlays, and `ytInitialData` keeps the data from the first full load, so it
+ * is only a fallback for the initial paint.
  */
 
 const PLAYER_SELECTOR = '#movie_player, .html5-video-player';
@@ -36,23 +37,22 @@ const STYLES = `
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 52px;
-  height: 84px;
+  width: 56px;
+  height: 88px;
   padding: 0;
   border: 0;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.55);
+  border-radius: 10px;
+  background: transparent;
   color: #fff;
-  font: 34px/1 system-ui, sans-serif;
+  font: 40px/1 system-ui, sans-serif;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
   cursor: pointer;
   pointer-events: auto;
+  opacity: 0.85;
 }
-#${NAV_ID} button:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.82);
-}
-#${NAV_ID} button:disabled {
-  opacity: 0.25;
-  cursor: default;
+#${NAV_ID} button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  opacity: 1;
 }
 #${NAV_ID} [data-direction="prev"] { left: 12px; }
 #${NAV_ID} [data-direction="next"] { right: 12px; }
@@ -65,8 +65,6 @@ const MARKER_KEYS = ['DESCRIPTION_CHAPTERS', 'AUTO_CHAPTERS'];
 let player = null;
 /** @type {HTMLElement | null} */
 let nav = null;
-/** Player element whose hover listeners are already installed. */
-let boundPlayer = null;
 /** @type {{ start: number, title: string }[]} */
 let chapters = [];
 
@@ -88,7 +86,7 @@ function markersFrom(source) {
 }
 
 /**
- * Read chapters from a player response or `ytInitialData` object.
+ * Read chapters from a page data or player response object.
  *
  * Chapters arrive as millisecond offsets under a `markersMap` entry whose value
  * carries a `chapters` array; every other marker (heatmap, sponsor segments)
@@ -129,6 +127,15 @@ function readChapters(source) {
   return [];
 }
 
+/** Page data YouTube refreshes on SPA navigation. */
+function appData() {
+  try {
+    return document.querySelector('ytd-app')?.data?.response ?? null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function playerData() {
   if (!player) return null;
   try {
@@ -139,8 +146,11 @@ function playerData() {
 }
 
 function currentChapters() {
-  const fromPlayer = readChapters(playerData());
-  return fromPlayer.length > 0 ? fromPlayer : readChapters(window.ytInitialData);
+  for (const source of [appData(), playerData(), window.ytInitialData]) {
+    const found = readChapters(source);
+    if (found.length > 0) return found;
+  }
+  return [];
 }
 
 function chapterIndex(time) {
@@ -175,33 +185,31 @@ function mount() {
 
   nav = document.createElement('div');
   nav.id = NAV_ID;
-  nav.append(addButton('prev', '‹', 'Previous chapter'), addButton('next', '›', 'Next chapter'));
+  nav.append(addButton('prev', '<', 'Previous chapter'), addButton('next', '>', 'Next chapter'));
   player.append(nav);
-
-  if (boundPlayer !== player) {
-    boundPlayer = player;
-    player.addEventListener('mouseenter', () => nav.classList.add(VISIBLE_CLASS));
-    player.addEventListener('mouseleave', () => nav.classList.remove(VISIBLE_CLASS));
-  }
 }
 
 function button(direction) {
   return nav?.querySelector(`[data-direction="${direction}"]`) ?? null;
 }
 
+function label(text, title) {
+  return title ? `${text}: ${title}` : text;
+}
+
 /**
  * Reflect the chapter list and playhead onto the two buttons.
  *
- * Titles name the chapter the button leads to, so the button explains itself
- * before it is clicked.
+ * Titles name the target, and the boundary actions are named for what they do
+ * (replay, skip to the end) so the buttons never look broken.
  */
 function update() {
   if (!nav) return;
 
-  const video = player?.querySelector('video');
-  const index = video ? chapterIndex(video.currentTime) : -1;
+  nav.hidden = chapters.length === 0;
   const prev = button('prev');
   const next = button('next');
+  if (!prev || !next) return;
 
   if (chapters.length === 0) {
     prev.disabled = true;
@@ -211,37 +219,55 @@ function update() {
     return;
   }
 
+  const video = player?.querySelector('video');
+  const index = video ? chapterIndex(video.currentTime) : -1;
   const previous = index > 0 ? chapters[index - 1] : null;
   const following = index === -1 ? chapters[0] : chapters[index + 1] ?? null;
 
-  prev.disabled = !previous;
-  next.disabled = !following;
-  prev.title = previous ? `Previous chapter: ${previous.title}` : 'No previous chapter';
-  next.title = following ? `Next chapter: ${following.title}` : 'No next chapter';
+  prev.disabled = false;
+  next.disabled = false;
+  prev.title =
+    index > 0
+      ? label('Previous chapter', previous.title)
+      : index === 0
+        ? label('Replay chapter', chapters[0].title)
+        : 'Restart video';
+  next.title = following ? label('Next chapter', following.title) : 'Skip to the end';
 }
 
-/** Seek to the adjacent chapter, re-reading chapter data so a stale cache cannot skip one. */
+function seek(video, seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return;
+  video.currentTime = seconds;
+}
+
+/**
+ * Seek to the adjacent chapter, or the boundary action when there is none.
+ * Chapter data is re-read first so a stale cache cannot skip one.
+ */
 function step(direction) {
   const video = player?.querySelector('video');
   if (!video) return;
 
   chapters = currentChapters();
-  const index = chapterIndex(video.currentTime);
-  const target =
-    direction > 0
-      ? index === -1
-        ? chapters[0]
-        : chapters[index + 1]
-      : index > 0
-        ? chapters[index - 1]
-        : null;
-
-  if (!target) {
+  if (chapters.length === 0) {
     update();
     return;
   }
 
-  video.currentTime = target.start;
+  const index = chapterIndex(video.currentTime);
+
+  if (direction > 0) {
+    if (index === -1) seek(video, chapters[0].start);
+    else if (index < chapters.length - 1) seek(video, chapters[index + 1].start);
+    else seek(video, video.duration);
+  } else if (index > 0) {
+    seek(video, chapters[index - 1].start);
+  } else if (index === 0) {
+    seek(video, chapters[0].start);
+  } else {
+    seek(video, 0);
+  }
+
   update();
 }
 
@@ -261,6 +287,21 @@ function refresh() {
 }
 
 refresh();
+
+// Hover is tracked from the document by pointer position: YouTube replaces
+// addEventListener on the player element (listeners registered there never see
+// mouseenter) and re-renders overlays under the cursor, so element-bound hover
+// events are unreliable.
+document.addEventListener('mousemove', (event) => {
+  if (!nav || !player) return;
+  const rect = player.getBoundingClientRect();
+  const inside =
+    event.clientX >= rect.left &&
+    event.clientX <= rect.right &&
+    event.clientY >= rect.top &&
+    event.clientY <= rect.bottom;
+  nav.classList.toggle(VISIBLE_CLASS, inside);
+});
 
 document.addEventListener('yt-navigate-finish', refresh);
 document.addEventListener('yt-page-data-updated', refresh);

@@ -52,11 +52,13 @@ dist/                  build output (gitignored)
 
 - `demo` — a counter widget that proves both storage backends and reload
   persistence. Reuse `src/storage.js` the same way.
-- `youtube-chapter-nav` — previous/next chapter buttons on the left and right
-  edges of the YouTube player, shown on hover. It reads chapters from the
-  player response (`multiMarkersPlayerBarRenderer.markersMap`, falling back to
-  `ytInitialData`), so it only offers navigation on videos that have authored or
-  auto-generated chapters. `@grant none`: no GM APIs are needed.
+- `youtube-chapter-nav` — previous/next arrow buttons on the left and right
+  edges of the YouTube player. They have no background and fade in when the
+  pointer is over the player. Chapters are read from `ytd-app`'s page data
+  (which YouTube refreshes on SPA navigation), falling back to `ytInitialData`,
+  so navigation only appears on videos with authored or auto-generated
+  chapters. At the first chapter, previous replays it from the start; at the
+  last chapter, next jumps to the end of the video. `@grant none`.
 
 ## Adding a userscript
 
@@ -105,3 +107,6 @@ then serves `playwright-report/` on `$PASEO_PORT`; `paseo script ls --workspace
   target and provide their own stub.
 - `@resource`/`GM_getResourceText`, `GM_openInTab`, and other grants outside
   `SUPPORTED_GRANTS` in `testing/index.js` fail at injection time by design.
+- Pages that enforce Trusted Types (YouTube does) reject
+  `page.addScriptTag`, so `injectAfterLoad` cannot target the live site. Use
+  `injectAtStart` or a fixture for those.

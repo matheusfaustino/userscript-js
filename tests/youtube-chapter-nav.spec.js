@@ -1,8 +1,9 @@
 /**
  * Chapter navigation buttons on a YouTube watch page.
  *
- * The fixture fakes the player's currentTime and chapter markersMap, so the
- * specs assert which time the script seeks to rather than decoding video.
+ * The fixture fakes the player's currentTime and the chapter markersMap on
+ * `ytd-app`'s page data, so the specs assert which time the script seeks to
+ * rather than decoding video.
  */
 
 const fs = require('node:fs');
@@ -18,13 +19,14 @@ const WATCH_URL = 'https://www.youtube.com/watch?v=chapter-test';
 const nav = (page) => page.locator('#usj-chapter-nav');
 const prevButton = (page) => page.getByRole('button', { name: 'Previous chapter' });
 const nextButton = (page) => page.getByRole('button', { name: 'Next chapter' });
-const currentTime = (page) => page.evaluate(() => window.__seeks.at(-1) ?? 0);
+const lastSeek = (page) => page.evaluate(() => window.__seeks.at(-1) ?? null);
 
 async function openWatchPage(page) {
   await serveHtml(page, WATCH_HTML, WATCH_URL);
   await page.goto(WATCH_URL);
   await injectAfterLoad(page, { file: BUILT });
   await expect(nav(page)).toHaveCount(1);
+  await expect(nav(page)).toBeVisible();
 }
 
 test('the built banner targets YouTube and needs no GM grants', () => {
@@ -37,10 +39,12 @@ test('the built banner targets YouTube and needs no GM grants', () => {
   expect(matchUrl(script.meta, 'https://example.com/watch?v=chapter-test')).toBe(false);
 });
 
-test('the buttons sit on the left and right edges and appear on hover', async ({ page }) => {
+test('the arrow buttons sit on the left and right edges and appear on hover', async ({ page }) => {
   await openWatchPage(page);
 
   await expect(nav(page)).not.toHaveClass(/usj-chapter-nav--visible/);
+  await expect(prevButton(page)).toHaveText('<');
+  await expect(nextButton(page)).toHaveText('>');
 
   const playerBox = await page.locator('#movie_player').boundingBox();
   const prevBox = await prevButton(page).boundingBox();
@@ -55,34 +59,67 @@ test('the buttons sit on the left and right edges and appear on hover', async ({
   await expect(nav(page)).toHaveClass(/usj-chapter-nav--visible/);
 });
 
-test('next and previous seek to the adjacent chapter starts', async ({ page }) => {
-  await openWatchPage(page);
+test('hover still works when the page overrides addEventListener on the player', async ({ page }) => {
+  // YouTube's player element drops mouseenter listeners registered through its
+  // addEventListener wrapper, so the script must not rely on that path.
+  await serveHtml(page, WATCH_HTML, WATCH_URL);
+  await page.goto(WATCH_URL);
+  await page.evaluate(() => {
+    const element = document.querySelector('#movie_player');
+    const native = element.addEventListener.bind(element);
+    element.addEventListener = (type, listener, options) => {
+      if (type !== 'mouseenter' && type !== 'mouseleave') native(type, listener, options);
+    };
+  });
 
-  await expect(prevButton(page)).toBeDisabled();
-  await expect(nextButton(page)).toHaveAttribute('title', 'Next chapter: Middle');
+  await injectAfterLoad(page, { file: BUILT });
+  await expect(nav(page)).toHaveCount(1);
 
-  await nextButton(page).click();
-  expect(await currentTime(page)).toBe(45);
-  await expect(prevButton(page)).toHaveAttribute('title', 'Previous chapter: Intro');
-  await expect(nextButton(page)).toHaveAttribute('title', 'Next chapter: Ending');
+  await page.hover('#movie_player');
+  await expect(nav(page)).toHaveClass(/usj-chapter-nav--visible/);
 
-  await nextButton(page).click();
-  expect(await currentTime(page)).toBe(90);
-  await expect(nextButton(page)).toBeDisabled();
-  await expect(nextButton(page)).toHaveAttribute('title', 'No next chapter');
-
-  await prevButton(page).click();
-  expect(await currentTime(page)).toBe(45);
-  await expect(prevButton(page)).toBeEnabled();
-
-  await prevButton(page).click();
-  expect(await currentTime(page)).toBe(0);
-  await expect(prevButton(page)).toBeDisabled();
-
-  expect(await page.evaluate(() => window.__seeks)).toEqual([45, 90, 45, 0]);
+  await page.mouse.move(1200, 700);
+  await expect(nav(page)).not.toHaveClass(/usj-chapter-nav--visible/);
 });
 
-test('both buttons disable when the video has no chapters', async ({ page }) => {
+test('next and previous move between chapters and handle the boundaries', async ({ page }) => {
+  await openWatchPage(page);
+
+  await expect(prevButton(page)).toHaveAttribute('title', 'Replay chapter: INTRO');
+  await expect(nextButton(page)).toHaveAttribute('title', 'Next chapter: Rivals of Aether');
+
+  // Nothing before INTRO: replay it from the start.
+  await prevButton(page).click();
+  expect(await lastSeek(page)).toBe(0);
+
+  await nextButton(page).click();
+  expect(await lastSeek(page)).toBe(43);
+  await expect(prevButton(page)).toHaveAttribute('title', 'Previous chapter: INTRO');
+  await expect(nextButton(page)).toHaveAttribute(
+    'title',
+    'Next chapter: Bloodstained: Curse of the Moon 2',
+  );
+
+  await nextButton(page).click();
+  expect(await lastSeek(page)).toBe(85);
+  await expect(nextButton(page)).toHaveAttribute('title', 'Skip to the end');
+
+  // Nothing after the last chapter: jump to the end of the video.
+  await nextButton(page).click();
+  expect(await lastSeek(page)).toBe(120);
+  await expect(prevButton(page)).toHaveAttribute('title', 'Previous chapter: Rivals of Aether');
+
+  await prevButton(page).click();
+  expect(await lastSeek(page)).toBe(43);
+  await prevButton(page).click();
+  expect(await lastSeek(page)).toBe(0);
+  await prevButton(page).click();
+  expect(await lastSeek(page)).toBe(0);
+
+  expect(await page.evaluate(() => window.__seeks)).toEqual([0, 43, 85, 120, 43, 0, 0]);
+});
+
+test('the buttons hide when the video has no chapters', async ({ page }) => {
   await openWatchPage(page);
 
   await page.evaluate(() => {
@@ -90,9 +127,11 @@ test('both buttons disable when the video has no chapters', async ({ page }) => 
     document.dispatchEvent(new Event('yt-navigate-finish'));
   });
 
-  await expect(prevButton(page)).toBeDisabled();
-  await expect(nextButton(page)).toBeDisabled();
-  await expect(nextButton(page)).toHaveAttribute('title', 'No chapters in this video');
+  await expect(nav(page)).toBeHidden();
+  await expect(page.locator('#usj-chapter-nav [data-direction="next"]')).toHaveAttribute(
+    'title',
+    'No chapters in this video',
+  );
 });
 
 test('a SPA navigation reloads the chapter list without duplicating the buttons', async ({
@@ -110,10 +149,26 @@ test('a SPA navigation reloads the chapter list without duplicating the buttons'
 
   await expect(nextButton(page)).toHaveAttribute('title', 'Next chapter: Part two');
   await nextButton(page).click();
-  expect(await currentTime(page)).toBe(10);
+  expect(await lastSeek(page)).toBe(10);
 
   await page.evaluate(() => document.dispatchEvent(new Event('yt-page-data-updated')));
   await expect(nav(page)).toHaveCount(1);
+});
+
+test('falls back to ytInitialData when ytd-app data is unavailable', async ({ page }) => {
+  await openWatchPage(page);
+
+  await page.evaluate(() => {
+    window.setChapters([
+      { start: 0, title: 'First' },
+      { start: 20, title: 'Fallback only' },
+    ]);
+    window.ytInitialData = window.__response;
+    delete document.querySelector('ytd-app').data;
+    document.dispatchEvent(new Event('yt-navigate-finish'));
+  });
+
+  await expect(nextButton(page)).toHaveAttribute('title', 'Next chapter: Fallback only');
 });
 
 test('does nothing on a YouTube page without a player', async ({ page }) => {
