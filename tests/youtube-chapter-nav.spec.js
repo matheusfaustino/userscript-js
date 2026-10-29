@@ -173,6 +173,33 @@ test('falls back to ytInitialData when ytd-app data is unavailable', async ({ pa
   await expect(nextButton(page)).toHaveAttribute('title', 'Next chapter: Fallback only');
 });
 
+test('stays inactive on YouTube pages that are not a watch page', async ({ page }) => {
+  // The home page can contain a player element in its mini-player; it still
+  // must not get chapter buttons.
+  await serveHtml(page, WATCH_HTML, 'https://www.youtube.com/');
+  await page.goto('https://www.youtube.com/');
+  await injectAfterLoad(page, { file: BUILT });
+
+  await expect(nav(page)).toHaveCount(0);
+  await expect(page.locator('#usj-chapter-nav-style')).toHaveCount(0);
+});
+
+test('SPA navigation away from a watch page removes the buttons', async ({ page }) => {
+  await openWatchPage(page);
+
+  await page.evaluate(() => {
+    history.pushState({}, '', '/feed/subscriptions');
+    document.dispatchEvent(new Event('yt-navigate-finish'));
+  });
+  await expect(nav(page)).toHaveCount(0);
+
+  await page.evaluate(() => {
+    history.pushState({}, '', '/watch?v=chapter-test');
+    document.dispatchEvent(new Event('yt-navigate-finish'));
+  });
+  await expect(nav(page)).toHaveCount(1);
+});
+
 test('does nothing on a YouTube page without a player', async ({ page }) => {
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));

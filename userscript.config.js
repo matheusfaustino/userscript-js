@@ -26,6 +26,8 @@ module.exports = [
     },
   },
   {
+    // The match covers every YouTube page because SPA navigation into a watch
+    // page does not re-run the userscript; the script only mounts on /watch.
     entry: 'src/userscripts/youtube-chapter-nav.js',
     outfile: 'dist/youtube-chapter-nav.user.js',
     meta: {

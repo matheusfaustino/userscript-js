@@ -13,6 +13,7 @@
  */
 
 const PLAYER_SELECTOR = '#movie_player, .html5-video-player';
+const WATCH_PATH = /^\/watch(\/|$)/;
 const NAV_ID = 'usj-chapter-nav';
 const VISIBLE_CLASS = 'usj-chapter-nav--visible';
 const STYLE_ID = 'usj-chapter-nav-style';
@@ -306,7 +307,28 @@ function step(direction) {
   update();
 }
 
+/**
+ * The buttons belong to a watch page only. Home, feeds, and the mini-player
+ * also contain a `#movie_player`, so checking for the player alone would put
+ * arrows on pages that have no chapters.
+ */
+function onWatchPage() {
+  return WATCH_PATH.test(window.location.pathname);
+}
+
+function teardown() {
+  nav?.remove();
+  nav = null;
+  player = null;
+  chapters = [];
+}
+
 function refresh() {
+  if (!onWatchPage()) {
+    teardown();
+    return;
+  }
+
   const nextPlayer = document.querySelector(PLAYER_SELECTOR);
   if (!nextPlayer) return;
 
