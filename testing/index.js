@@ -131,10 +131,17 @@ function installShim(config) {
     GM_getValue(key, defaultValue) {
       const raw = readRaw(gmKey(key));
       if (raw === null || raw === undefined) return defaultValue;
-      return raw;
+      if (typeof raw !== 'string') return raw;
+      // Tampermonkey preserves the stored type. Values written before this
+      // shim encoded on write are still plain text, so fall back to verbatim.
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        return raw;
+      }
     },
     GM_setValue(key, value) {
-      writeRaw(gmKey(key), typeof value === 'string' ? value : JSON.stringify(value));
+      writeRaw(gmKey(key), JSON.stringify(value === undefined ? null : value));
     },
     GM_deleteValue(key) {
       removeRaw(gmKey(key));

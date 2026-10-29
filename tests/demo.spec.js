@@ -40,11 +40,14 @@ test('mounts with the shimmed GM backend and increments', async ({ page }) => {
   await page.getByRole('button', { name: '+1' }).click();
   await expect(counter(page)).toHaveText('1');
 
-  const stored = await page.evaluate(
-    ({ prefix, key }) => localStorage.getItem(prefix + key),
-    { prefix: GM_PREFIX, key: STORE_KEY },
-  );
+  const stored = await page.evaluate((key) => GM_getValue(key), STORE_KEY);
+  // createStore hands GM_setValue a serialised string, so that is what the
+  // GM channel holds; createStore is what turns it back into a number.
   expect(stored).toBe('1');
+  // The GM backend must not also reach for the page's localStorage key.
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), STORE_KEY),
+  ).toBeNull();
 });
 
 test('the GM-backed value survives a reload', async ({ page }) => {
@@ -74,12 +77,7 @@ test('registers the GM menu command and runs it', async ({ page }) => {
   await page.evaluate(() => window.__userscriptTest.runMenuCommand('Reset demo counter'));
   await expect(counter(page)).toHaveText('0');
   await expect
-    .poll(() =>
-      page.evaluate(
-        ({ prefix, key }) => localStorage.getItem(prefix + key),
-        { prefix: GM_PREFIX, key: STORE_KEY },
-      ),
-    )
+    .poll(() => page.evaluate((key) => GM_getValue(key), STORE_KEY))
     .toBe('0');
 });
 
