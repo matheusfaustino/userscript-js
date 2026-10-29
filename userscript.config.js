@@ -33,12 +33,16 @@ module.exports = [
     meta: {
       name: 'YouTube chapter navigation',
       namespace: 'https://github.com/matheusfaustino/userscript-js',
-      version: '0.1.0',
+      version: '0.2.0',
       description: 'Previous/next chapter buttons on the left and right edges of the YouTube player.',
       author: 'Matheus Faustino',
       match: ['*://*.youtube.com/*'],
       grant: 'none',
       'run-at': 'document-end',
+      // Violentmonkey-specific: keep the script in page context so YouTube's
+      // page objects (ytd-app.data, ytInitialData) stay readable. The default
+      // "auto" can fall back to a content script when CSP interferes.
+      'inject-into': 'page',
     },
   },
 ];

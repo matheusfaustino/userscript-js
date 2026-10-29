@@ -31,6 +31,7 @@ const ORDER = [
   'require',
   'connect',
   'run-at',
+  'inject-into',
   'noframes',
 ];
 

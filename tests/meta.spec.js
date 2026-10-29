@@ -50,6 +50,7 @@ test('serializeMetadata round-trips through parseMetadata', () => {
     match: ['https://example.com/*', '*://*.example.org/path/*'],
     grant: ['GM_getValue'],
     'run-at': 'document-start',
+    'inject-into': 'page',
   };
 
   const parsed = parseMetadata(serializeMetadata(meta));
@@ -59,6 +60,7 @@ test('serializeMetadata round-trips through parseMetadata', () => {
   expect(parsed.matches).toEqual(meta.match);
   expect(parsed.grants).toEqual(meta.grant);
   expect(parsed['run-at']).toBe('document-start');
+  expect(parsed['inject-into']).toBe('page');
   expect(parseMetadata(serializeMetadata(parsed)).matches).toEqual(meta.match);
 });
 

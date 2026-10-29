@@ -35,6 +35,8 @@ test('the built banner targets YouTube and needs no GM grants', () => {
   expect(script.meta.matches).toEqual(['*://*.youtube.com/*']);
   expect(script.meta.grants).toEqual(['none']);
   expect(script.meta['run-at']).toBe('document-end');
+  // Violentmonkey-specific: page context is required to read page objects.
+  expect(script.meta['inject-into']).toBe('page');
   expect(matchUrl(script.meta, WATCH_URL)).toBe(true);
   expect(matchUrl(script.meta, 'https://example.com/watch?v=chapter-test')).toBe(false);
 });
@@ -198,6 +200,29 @@ test('SPA navigation away from a watch page removes the buttons', async ({ page 
     document.dispatchEvent(new Event('yt-navigate-finish'));
   });
   await expect(nav(page)).toHaveCount(1);
+});
+
+test('reads page data through unsafeWindow when a manager sandboxes the script', async ({
+  page,
+}) => {
+  await serveHtml(page, WATCH_HTML, WATCH_URL);
+  await page.goto(WATCH_URL);
+  await page.evaluate(() => {
+    // Model a sandboxed manager: page objects are reachable only through
+    // unsafeWindow, while the DOM element itself carries no expando data.
+    window.setChapters([{ start: 5, title: 'Sandboxed chapter' }]);
+    const response = window.__response;
+    delete document.querySelector('ytd-app').data;
+    window.unsafeWindow = {
+      document: { querySelector: () => ({ data: { response } }) },
+      ytInitialData: null,
+    };
+  });
+
+  await injectAfterLoad(page, { file: BUILT });
+
+  await expect(nav(page)).toHaveCount(1);
+  await expect(nextButton(page)).toHaveAttribute('title', 'Next chapter: Sandboxed chapter');
 });
 
 test('does nothing on a YouTube page without a player', async ({ page }) => {

@@ -64,6 +64,21 @@ dist/                  build output (gitignored)
   the start; at the last chapter, next jumps to the end of the video.
   `@grant none`.
 
+## Userscript managers
+
+The bundles install in Tampermonkey and Violentmonkey. This project uses
+`@grant none` and, for Violentmonkey, `@inject-into page`: chapter data lives on
+YouTube's page objects (`ytd-app.data`, `window.ytInitialData`), which a content
+script cannot read. Keep Violentmonkey's injection mode on `page` (or `auto`);
+if it is forced to `content`, the chapter buttons stay hidden.
+
+`inject-into` is Violentmonkey-specific. Other managers ignore it, and with
+`@grant none` they already run the script in page context.
+
+Install from the built file in `dist/` — drag it onto the manager's dashboard or
+paste its contents into a new script. The repository is private, so installing
+from a raw GitHub URL needs authentication.
+
 ## Adding a userscript
 
 1. Write `src/userscripts/<name>.js`. Use `createStore` from `src/storage.js`

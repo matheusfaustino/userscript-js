@@ -10,7 +10,13 @@
  * SPA navigation. The player response on live pages does not carry the chapter
  * overlays, and `ytInitialData` keeps the data from the first full load, so it
  * is only a fallback for the initial paint.
+ *
+ * Both sources are page JavaScript objects, so the script has to run in page
+ * context: `@grant none` plus `@inject-into page` (Violentmonkey) keep that
+ * true, and `unsafeWindow` covers managers that sandbox a granted script.
  */
+
+const pageWindow = typeof unsafeWindow === 'undefined' ? window : unsafeWindow; // eslint-disable-line no-undef
 
 const PLAYER_SELECTOR = '#movie_player, .html5-video-player';
 const WATCH_PATH = /^\/watch(\/|$)/;
@@ -146,7 +152,7 @@ function readChapters(source) {
 /** Page data YouTube refreshes on SPA navigation. */
 function appData() {
   try {
-    return document.querySelector('ytd-app')?.data?.response ?? null;
+    return pageWindow.document.querySelector('ytd-app')?.data?.response ?? null;
   } catch (error) {
     return null;
   }
@@ -162,7 +168,7 @@ function playerData() {
 }
 
 function currentChapters() {
-  for (const source of [appData(), playerData(), window.ytInitialData]) {
+  for (const source of [appData(), playerData(), pageWindow.ytInitialData]) {
     const found = readChapters(source);
     if (found.length > 0) return found;
   }
