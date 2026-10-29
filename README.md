@@ -48,6 +48,16 @@ tests/fixtures/        pages a test serves at a matching URL
 dist/                  build output (gitignored)
 ```
 
+## Included scripts
+
+- `demo` — a counter widget that proves both storage backends and reload
+  persistence. Reuse `src/storage.js` the same way.
+- `youtube-chapter-nav` — previous/next chapter buttons on the left and right
+  edges of the YouTube player, shown on hover. It reads chapters from the
+  player response (`multiMarkersPlayerBarRenderer.markersMap`, falling back to
+  `ytInitialData`), so it only offers navigation on videos that have authored or
+  auto-generated chapters. `@grant none`: no GM APIs are needed.
+
 ## Adding a userscript
 
 1. Write `src/userscripts/<name>.js`. Use `createStore` from `src/storage.js`

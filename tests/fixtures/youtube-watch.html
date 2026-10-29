@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Chapter test — YouTube fixture</title>
+    <style>
+      body { margin: 0; background: #0f0f0f; }
+      #movie_player {
+        position: relative;
+        width: 960px;
+        height: 540px;
+        background: #000;
+      }
+      #movie_player video { width: 100%; height: 100%; display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="movie_player" class="html5-video-player">
+      <video class="html5-main-video" muted playsinline></video>
+    </div>
+
+    <script>
+      // Stands in for the YouTube player: no media is loaded, so currentTime
+      // and duration are faked and every seek is recorded for the specs.
+      const player = document.getElementById('movie_player');
+      const video = player.querySelector('video');
+      let time = 0;
+      window.__seeks = [];
+
+      Object.defineProperty(video, 'currentTime', {
+        configurable: true,
+        get: () => time,
+        set: (value) => {
+          time = value;
+          window.__seeks.push(value);
+          video.dispatchEvent(new Event('timeupdate'));
+        },
+      });
+      Object.defineProperty(video, 'duration', { configurable: true, get: () => 120 });
+
+      window.__chapters = [
+        { start: 0, title: 'Intro' },
+        { start: 45, title: 'Middle' },
+        { start: 90, title: 'Ending' },
+      ];
+
+      window.__response = { playerOverlays: null };
+      player.getPlayerResponse = () => window.__response;
+
+      // Build the same markersMap shape the watch page receives.
+      window.setChapters = (chapters) => {
+        window.__chapters = chapters;
+        window.__response = {
+          playerOverlays: {
+            playerOverlayRenderer: {
+              decoratedPlayerBarRenderer: {
+                decoratedPlayerBarRenderer: {
+                  playerBar: {
+                    multiMarkersPlayerBarRenderer: {
+                      markersMap: [
+                        { key: 'HEATMAP', value: { heatmap: [] } },
+                        {
+                          key: 'DESCRIPTION_CHAPTERS',
+                          value: {
+                            chapters: chapters.map((chapter) => ({
+                              chapterRenderer: {
+                                timeRangeStartMillis: chapter.start * 1000,
+                                title: { simpleText: chapter.title },
+                              },
+                            })),
+                          },
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          },
+        };
+      };
+
+      window.setChapters(window.__chapters);
+    </script>
+  </body>
+</html>

@@ -25,4 +25,18 @@ module.exports = [
       'run-at': 'document-end',
     },
   },
+  {
+    entry: 'src/userscripts/youtube-chapter-nav.js',
+    outfile: 'dist/youtube-chapter-nav.user.js',
+    meta: {
+      name: 'YouTube chapter navigation',
+      namespace: 'https://github.com/matheusfaustino/userscript-js',
+      version: '0.1.0',
+      description: 'Previous/next chapter buttons on the left and right edges of the YouTube player.',
+      author: 'Matheus Faustino',
+      match: ['*://*.youtube.com/*'],
+      grant: 'none',
+      'run-at': 'document-end',
+    },
+  },
 ];
