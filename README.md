@@ -114,6 +114,17 @@ paseo script start report --workspace wks_22479f2c82256ddf
 then serves `playwright-report/` on `$PASEO_PORT`; `paseo script ls --workspace
 <id>` prints the public proxy URL.
 
+## CI
+
+`.github/workflows/build.yml` runs `npm test` on every push to `master` and on
+manual dispatch. Only after the suite passes does it upload `dist/*.user.js` as
+the `userscripts` workflow artifact and attach them to a `build-<sha>`
+prerelease whose target is the pushed commit.
+
+npm's download cache (via `setup-node`) and the Playwright browser bundle (via
+`actions/cache`, keyed on `package-lock.json`) are reused between runs; a cache
+hit skips the browser download.
+
 ## Known limitations
 
 - No real manager sandbox. GM_* semantics are the shim's, not Tampermonkey's:

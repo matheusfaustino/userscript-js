@@ -1,0 +1,65 @@
+name: Build userscripts
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium firefox
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium firefox
+
+      - name: Test
+        run: npm test
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: userscripts
+          path: dist/*.user.js
+          if-no-files-found: error
+
+      - name: Attach build to the commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="build-${GITHUB_SHA::7}"
+          gh release delete "$tag" --yes --cleanup-tag || true
+          gh release create "$tag" dist/*.user.js \
+            --target "$GITHUB_SHA" \
+            --title "Build ${GITHUB_SHA::7}" \
+            --notes "Automated build of ${GITHUB_SHA}." \
+            --prerelease
