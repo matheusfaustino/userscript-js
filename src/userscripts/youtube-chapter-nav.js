@@ -37,26 +37,41 @@ const STYLES = `
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 56px;
-  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
   padding: 0;
   border: 0;
-  border-radius: 10px;
   background: transparent;
   color: #fff;
-  font: 40px/1 system-ui, sans-serif;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.85);
+  opacity: 0.9;
   cursor: pointer;
   pointer-events: auto;
-  opacity: 0.85;
+  transition: opacity 100ms ease;
 }
-#${NAV_ID} button:hover {
-  background: rgba(255, 255, 255, 0.15);
+#${NAV_ID} button:hover,
+#${NAV_ID} button:focus-visible {
   opacity: 1;
 }
-#${NAV_ID} [data-direction="prev"] { left: 12px; }
-#${NAV_ID} [data-direction="next"] { right: 12px; }
+#${NAV_ID} button:focus-visible {
+  outline: 2px solid #3ea6ff;
+  outline-offset: -4px;
+}
+#${NAV_ID} svg {
+  display: block;
+  width: 36px;
+  height: 36px;
+  fill: currentColor;
+}
+#${NAV_ID} [data-direction="prev"] { left: 8px; }
+#${NAV_ID} [data-direction="next"] { right: 8px; }
 `;
+
+const CHEVRON_LEFT = 'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z';
+const CHEVRON_RIGHT = 'M8.59 16.59 10 18l6-6-6-6-1.41 1.41L13.17 12z';
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 /** Marker keys YouTube uses for authored and auto-generated chapters. */
 const MARKER_KEYS = ['DESCRIPTION_CHAPTERS', 'AUTO_CHAPTERS'];
@@ -161,12 +176,29 @@ function chapterIndex(time) {
   return index;
 }
 
-function addButton(direction, glyph, label) {
+function chevron(path) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+
+  const shape = document.createElementNS(SVG_NS, 'path');
+  shape.setAttribute('d', path);
+  shape.setAttribute('class', 'ytp-svg-fill');
+  svg.append(shape);
+
+  return svg;
+}
+
+function addButton(direction, path, label) {
+  // ytp-button is YouTube's own control styling; the SVG classes let the
+  // player's icon rules apply so the arrows match the adjacent controls.
   const button = document.createElement('button');
   button.type = 'button';
+  button.className = 'ytp-button';
   button.dataset.direction = direction;
-  button.textContent = glyph;
   button.setAttribute('aria-label', label);
+  button.append(chevron(path));
   button.addEventListener('click', () => step(direction === 'next' ? 1 : -1));
   return button;
 }
@@ -185,7 +217,10 @@ function mount() {
 
   nav = document.createElement('div');
   nav.id = NAV_ID;
-  nav.append(addButton('prev', '<', 'Previous chapter'), addButton('next', '>', 'Next chapter'));
+  nav.append(
+    addButton('prev', CHEVRON_LEFT, 'Previous chapter'),
+    addButton('next', CHEVRON_RIGHT, 'Next chapter'),
+  );
   player.append(nav);
 }
 

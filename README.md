@@ -53,12 +53,14 @@ dist/                  build output (gitignored)
 - `demo` — a counter widget that proves both storage backends and reload
   persistence. Reuse `src/storage.js` the same way.
 - `youtube-chapter-nav` — previous/next arrow buttons on the left and right
-  edges of the YouTube player. They have no background and fade in when the
-  pointer is over the player. Chapters are read from `ytd-app`'s page data
-  (which YouTube refreshes on SPA navigation), falling back to `ytInitialData`,
-  so navigation only appears on videos with authored or auto-generated
-  chapters. At the first chapter, previous replays it from the start; at the
-  last chapter, next jumps to the end of the video. `@grant none`.
+  edges of the YouTube player, styled with the player's own `ytp-button` class
+  and 36px chevrons so they match the native controls. They have no background
+  and fade in when the pointer is over the player. Chapters are read from
+  `ytd-app`'s page data (which YouTube refreshes on SPA navigation), falling
+  back to `ytInitialData`, so navigation only appears on videos with authored
+  or auto-generated chapters. At the first chapter, previous replays it from
+  the start; at the last chapter, next jumps to the end of the video.
+  `@grant none`.
 
 ## Adding a userscript
 

@@ -43,8 +43,10 @@ test('the arrow buttons sit on the left and right edges and appear on hover', as
   await openWatchPage(page);
 
   await expect(nav(page)).not.toHaveClass(/usj-chapter-nav--visible/);
-  await expect(prevButton(page)).toHaveText('<');
-  await expect(nextButton(page)).toHaveText('>');
+  await expect(prevButton(page)).toHaveClass(/ytp-button/);
+  await expect(nextButton(page)).toHaveClass(/ytp-button/);
+  await expect(prevButton(page).locator('svg path')).toHaveCount(1);
+  await expect(nextButton(page).locator('svg path')).toHaveCount(1);
 
   const playerBox = await page.locator('#movie_player').boundingBox();
   const prevBox = await prevButton(page).boundingBox();
