@@ -1,0 +1,25 @@
+{
+  "name": "userscript-js",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Build Tampermonkey userscripts with esbuild and test them in Playwright without installing Tampermonkey.",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./meta": "./src/meta.js",
+    "./storage": "./src/storage.js",
+    "./testing": "./testing/index.js",
+    "./build": "./build.js"
+  },
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch",
+    "test": "npm run build && playwright test",
+    "test:headed": "npm run build && playwright test --headed",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.60.0",
+    "esbuild": "^0.21.0"
+  }
+}
