@@ -28,14 +28,14 @@ module.exports = [
   {
     // Video cards exist on the home feed, search results, and the watch-page
     // sidebar, and YouTube navigates between them without a reload.
-    entry: 'src/userscripts/youtube-not-interested.js',
-    outfile: 'dist/youtube-not-interested.user.js',
+    entry: 'src/userscripts/youtube-thumbnail-actions.js',
+    outfile: 'dist/youtube-thumbnail-actions.user.js',
     meta: {
-      name: 'YouTube not interested shortcut',
+      name: 'YouTube thumbnail actions',
       namespace: 'https://github.com/matheusfaustino/userscript-js',
-      version: '0.1.0',
+      version: '0.2.0',
       description:
-        'Hover a Not interested button on YouTube video thumbnails to run the card\'s real action.',
+        'Hover shortcuts on YouTube video thumbnails to run the card\'s real menu actions: Not interested and Save to Watch later.',
       author: 'Matheus Faustino',
       match: ['*://*.youtube.com/*'],
       grant: 'none',

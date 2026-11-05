@@ -203,10 +203,16 @@
 
       window.__menuOpens = [];
       window.__notInterested = [];
+      window.__watchLater = [];
 
       const MENUS = {
         'vid-home': [
-          { iconType: 'WATCH_LATER', label: 'Salvar para assistir mais tarde', path: CLOCK_PATH },
+          {
+            iconType: 'WATCH_LATER',
+            label: 'Salvar para assistir mais tarde',
+            path: CLOCK_PATH,
+            action: 'watch-later',
+          },
           {
             // Shares the Not interested glyph and uses the direct data shape;
             // the explicit type must win over the path.
@@ -229,7 +235,11 @@
         ],
         'vid-sidebar': [
           // No iconType: only the rendered path marks this item.
-          { label: 'Salvar para assistir mais tarde', path: CLOCK_PATH },
+          {
+            label: 'Salvar para assistir mais tarde',
+            path: CLOCK_PATH,
+            action: 'watch-later',
+          },
           {
             label: 'Não tenho interesse',
             path: NOT_INTERESTED_PATH,
@@ -237,7 +247,12 @@
           },
         ],
         'vid-sidebar-2': [
-          { iconType: 'WATCH_LATER', label: 'Salvar para assistir mais tarde', path: CLOCK_PATH },
+          {
+            iconType: 'WATCH_LATER',
+            label: 'Salvar para assistir mais tarde',
+            path: CLOCK_PATH,
+            action: 'watch-later',
+          },
           { iconType: 'DONT_RECOMMEND_CHANNEL', label: 'Não recomendar este canal', path: PERSON_PATH },
         ],
         'vid-doc': [
@@ -299,6 +314,8 @@
           item.addEventListener('click', () => {
             if (spec.action === 'not-interested') {
               window.__notInterested.push(card.dataset.videoId);
+            } else if (spec.action === 'watch-later') {
+              window.__watchLater.push(card.dataset.videoId);
             }
             closeMenu();
           });
@@ -322,6 +339,8 @@
         item.addEventListener('click', () => {
           if (spec.action === 'not-interested') {
             window.__notInterested.push(card.dataset.videoId);
+          } else if (spec.action === 'watch-later') {
+            window.__watchLater.push(card.dataset.videoId);
           }
           closeMenu();
         });

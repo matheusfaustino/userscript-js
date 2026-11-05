@@ -1,11 +1,13 @@
 /**
- * "Not interested" shortcut for YouTube video cards.
+ * "Not interested" and "Watch later" shortcuts for YouTube video cards.
  *
  * Adds a circular "block" button (YouTube's own Not interested icon) to the
  * top-left corner of every video thumbnail on the home feed and the watch-page
  * sidebar. Clicking it opens the card's own three-dot menu and activates the
  * real "Not interested" item, so YouTube runs the same feedback request a
- * manual click would run.
+ * manual click would run. A second circular button right below it (the
+ * watch-later clock icon) triggers the card's real "Save to Watch later" item
+ * the same way. The two share one running-action guard, so clicks never race.
  *
  * Menu items are identified by icon, not by label. YouTube localizes the text,
  * so an English-only match would silently do nothing in other locales. The
@@ -24,7 +26,6 @@
  * menus use the `HIDE` image name for the same action).
  */
 
-const BUTTON_CLASS = 'usj-ni-button';
 const HOST_CLASS = 'usj-ni-host';
 const STYLE_ID = 'usj-ni-style';
 const MENU_TIMEOUT_MS = 1000;
@@ -101,7 +102,7 @@ const ITEM_SELECTOR = [
  * `NOT_INTERESTED` iconType maps to `circle_slash` / `slash_circle_left`, whose
  * path is the Material "block" glyph (circle with a diagonal slash).
  */
-const ICON_PATH =
+const NOT_INTERESTED_GLYPH =
   'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 ' +
   '3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 ' +
   '0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z';
@@ -112,7 +113,7 @@ const ICON_PATH =
  */
 const NOT_INTERESTED_PATHS = new Set(
   [
-    ICON_PATH,
+    NOT_INTERESTED_GLYPH,
     'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM7 11h10v2H7z',
     'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z',
     'M7 11v2h10v-2H7zm5-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z',
@@ -123,7 +124,7 @@ const NOT_INTERESTED_PATHS = new Set(
  * Last-resort labels. The icon checks above cover every locale; this list only
  * exists for surfaces that render the item without data or an SVG icon.
  */
-const TEXT_FALLBACKS = [
+const NOT_INTERESTED_TEXTS = [
   'not interested',
   'nicht interessiert',
   'kein interesse',
@@ -153,13 +154,83 @@ const TEXT_FALLBACKS = [
   'ikke interessert',
 ].map(normalizeText);
 
+/**
+ * YouTube's "Save to Watch later" glyph: the Material clock ("schedule")
+ * circle, as used by the menu item's WATCH_LATER icon.
+ */
+const WATCH_LATER_GLYPH =
+  'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2z' +
+  'M12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z';
+
+const WATCH_LATER_PATHS = new Set([WATCH_LATER_GLYPH].map(compactPath));
+
+/**
+ * Last-resort labels for "Save to Watch later". Stored already normalized,
+ * since the item label is normalized the same way ('später' -> 'spater').
+ */
+const WATCH_LATER_TEXTS = [
+  'watch later',
+  'spaeter ansehen',
+  'spater ansehen',
+  'assistir mais tarde',
+  'ver mas tarde',
+].map(normalizeText);
+
+/**
+ * The hover actions this script mounts and the menu items they trigger.
+ *
+ * Each entry drives the shared engine: the button class, its title/aria-label
+ * and glyph, and how a menu item is recognized (see matchesAction). Not
+ * interested keeps its original button class and matching rules unchanged.
+ */
+const ACTIONS = [
+  {
+    buttonClass: 'usj-ni-button',
+    label: 'Not interested',
+    glyph: NOT_INTERESTED_GLYPH,
+    top: '8px',
+    paths: NOT_INTERESTED_PATHS,
+    texts: NOT_INTERESTED_TEXTS,
+    // Icon types that identify the item on their own (substring match).
+    iconTypes: ['NOT_INTERESTED'],
+    // Types shared with unrelated actions: they only count when the rendered
+    // path or the label corroborates. Newer builds label the icon "HIDE"
+    // instead of "NOT_INTERESTED" (siblings use
+    // ADD_TO_QUEUE_TAIL/WATCH_LATER/BOOKMARK_BORDER/SHARE/REMOVE/FLAG).
+    corroborateTypes: ['HIDE'],
+  },
+  {
+    buttonClass: 'usj-wl-button',
+    label: 'Save to Watch later',
+    glyph: WATCH_LATER_GLYPH,
+    top: '52px',
+    paths: WATCH_LATER_PATHS,
+    texts: WATCH_LATER_TEXTS,
+    iconTypes: ['WATCH_LATER'],
+  },
+];
+
+const BUTTON_SELECTOR = ACTIONS.map((action) => `.${action.buttonClass}`).join(
+  ', ',
+);
+
+const REVEAL_SELECTOR = ACTIONS.flatMap((action) => [
+  `.${HOST_CLASS}:hover .${action.buttonClass}`,
+  `.${HOST_CLASS}:focus-within .${action.buttonClass}`,
+  `.${action.buttonClass}:focus-visible`,
+]).join(', ');
+
+/** Pseudo-class rules qualify each class, so the pseudo applies to all of them. */
+function buttonSelectorWith(pseudo) {
+  return ACTIONS.map((action) => `.${action.buttonClass}${pseudo}`).join(', ');
+}
+
 const STYLES = `
 .${HOST_CLASS} {
   position: relative;
 }
-.${BUTTON_CLASS} {
+${BUTTON_SELECTOR} {
   position: absolute;
-  top: 8px;
   left: 8px;
   z-index: 1000;
   display: flex;
@@ -177,19 +248,18 @@ const STYLES = `
   pointer-events: auto;
   transition: opacity 120ms ease, background-color 120ms ease;
 }
-.${HOST_CLASS}:hover .${BUTTON_CLASS},
-.${HOST_CLASS}:focus-within .${BUTTON_CLASS},
-.${BUTTON_CLASS}:focus-visible {
+${ACTIONS.map((action) => `.${action.buttonClass} { top: ${action.top}; }`).join('\n')}
+${REVEAL_SELECTOR} {
   opacity: 1;
 }
-.${BUTTON_CLASS}:hover {
+${buttonSelectorWith(':hover')} {
   background: rgba(0, 0, 0, 0.9);
 }
-.${BUTTON_CLASS}:focus-visible {
+${buttonSelectorWith(':focus-visible')} {
   outline: 2px solid #3ea6ff;
   outline-offset: 2px;
 }
-.${BUTTON_CLASS} svg {
+${buttonSelectorWith(' svg')} {
   display: block;
   width: 24px;
   height: 24px;
@@ -197,9 +267,15 @@ const STYLES = `
   pointer-events: none;
 }
 @media (hover: none) {
-  .${BUTTON_CLASS} { opacity: 1; }
+  ${BUTTON_SELECTOR} {
+    opacity: 1;
+  }
 }
 `;
+
+function ourButtonsIn(card) {
+  return card.querySelectorAll(BUTTON_SELECTOR);
+}
 
 let busy = false;
 let scanTimer = 0;
@@ -268,19 +344,19 @@ function cardMenu(card) {
   return card.querySelector('#menu #button, #menu yt-icon-button, #menu button, #button');
 }
 
-function createButton(card) {
+function createButton(card, action) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = BUTTON_CLASS;
-  button.title = 'Not interested';
-  button.setAttribute('aria-label', 'Not interested');
+  button.className = action.buttonClass;
+  button.title = action.label;
+  button.setAttribute('aria-label', action.label);
 
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
   const shape = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  shape.setAttribute('d', ICON_PATH);
+  shape.setAttribute('d', action.glyph);
   svg.append(shape);
   button.append(svg);
 
@@ -289,7 +365,7 @@ function createButton(card) {
   button.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-    notInterested(card);
+    runAction(card, action);
   });
   button.addEventListener('auxclick', (event) => {
     event.preventDefault();
@@ -308,25 +384,27 @@ function ensureStyles() {
 }
 
 function attach(card) {
-  if (card.querySelector(`.${BUTTON_CLASS}`)) return;
+  if (ourButtonsIn(card).length > 0) return;
   if (!isVideoCard(card)) return;
   const thumbnail = thumbnailIn(card);
   if (!thumbnail) return;
   if (!cardMenu(card)) return;
 
   ensureStyles();
-  // Hosting the button on the thumbnail (not the card) keeps it inside the
+  // Hosting the buttons on the thumbnail (not the card) keeps them inside the
   // image bounds and makes the hover reveal cover only the thumbnail.
   thumbnail.classList.add(HOST_CLASS);
-  thumbnail.append(createButton(card));
+  for (const action of ACTIONS) {
+    thumbnail.append(createButton(card, action));
+  }
 }
 
 function attachAll(root = document) {
   for (const card of root.querySelectorAll(CARD_SELECTOR)) {
-    const existing = card.querySelector(`.${BUTTON_CLASS}`);
-    // A virtualized card can be reused for a Short or ad; drop the button then.
-    if (existing && !isVideoCard(card)) {
-      existing.remove();
+    const existing = ourButtonsIn(card);
+    // A virtualized card can be reused for a Short or ad; drop the buttons then.
+    if (existing.length > 0 && !isVideoCard(card)) {
+      existing.forEach((button) => button.remove());
       continue;
     }
     attach(card);
@@ -478,56 +556,62 @@ function svgPathsIn(root) {
   return paths;
 }
 
-function hasNotInterestedPath(item) {
+function hasPathIn(item, paths) {
   for (const path of svgPathsIn(item)) {
     const value = path.getAttribute('d');
-    if (value && NOT_INTERESTED_PATHS.has(compactPath(value))) return true;
+    if (value && paths.has(compactPath(value))) return true;
   }
   return false;
 }
 
-function textMatches(item) {
+function textMatchesItem(item, phrases) {
   const label = normalizeText(
     `${item.getAttribute('aria-label') ?? ''} ${item.textContent ?? ''}`,
   );
-  return TEXT_FALLBACKS.some((phrase) => label.includes(phrase));
+  return phrases.some((phrase) => label.includes(phrase));
 }
 
 /**
- * Decide whether a menu item is "Not interested".
+ * Decide whether a menu item matches an action.
  *
  * A recognized icon decides either way, so a localized label cannot override
  * it. Path and text checks are only consulted when the item exposes no icon
- * type at all — except for HIDE, whose name is shared with unrelated hide
- * actions: it only counts when the rendered path or the label corroborates.
- * Newer builds label the icon "HIDE" instead of "NOT_INTERESTED" (siblings
- * use ADD_TO_QUEUE_TAIL/WATCH_LATER/BOOKMARK_BORDER/SHARE/REMOVE/FLAG).
+ * type at all — except for corroborate types (for Not interested, HIDE, whose
+ * name is shared with unrelated hide actions): those only count when the
+ * rendered path or the label corroborates.
  */
-function isNotInterested(item) {
+function matchesAction(item, action) {
   const types = iconTypesOf(item);
   if (types.length > 0) {
-    if (types.some((type) => type.includes('NOT_INTERESTED'))) return true;
-    if (types.includes('HIDE')) {
-      return hasNotInterestedPath(item) || textMatches(item);
+    if (
+      types.some((type) => action.iconTypes.some((name) => type.includes(name)))
+    ) {
+      return true;
+    }
+    if (action.corroborateTypes?.some((name) => types.includes(name))) {
+      return hasPathIn(item, action.paths) || textMatchesItem(item, action.texts);
     }
     return false;
   }
-  if (hasNotInterestedPath(item)) return true;
-  return textMatches(item);
+  return hasPathIn(item, action.paths) || textMatchesItem(item, action.texts);
 }
 
-function findNotInterestedItem(menu, preexisting) {
-  return visibleMenuItems(menu, preexisting).find(isNotInterested) ?? null;
+function findItem(menu, action, preexisting) {
+  return (
+    visibleMenuItems(menu, preexisting).find((item) =>
+      matchesAction(item, action),
+    ) ?? null
+  );
 }
 
 function delay(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
-async function waitForNotInterestedItem(menu, preexisting) {
+async function waitForItem(menu, action, preexisting) {
   const deadline = Date.now() + MENU_TIMEOUT_MS;
   for (;;) {
-    const item = findNotInterestedItem(menu, preexisting);
+    const item = findItem(menu, action, preexisting);
     if (item) return item;
     if (Date.now() >= deadline) return null;
     await delay(50);
@@ -559,14 +643,17 @@ function closeMenus() {
  * The menu opens asynchronously, so the item is polled for at most one second.
  * When it never appears (for example on a card that only offers "Save"), the
  * menu is closed and nothing else is clicked.
+ *
+ * One shared busy guard covers both buttons: while an action is running, a
+ * click on the other button is ignored instead of racing it.
  */
-async function notInterested(card) {
+async function runAction(card, action) {
   if (busy) return;
   busy = true;
   try {
     // A card can be reused for a Short/ad between scans; never act on it then.
     if (!isVideoCard(card)) {
-      card.querySelector(`.${BUTTON_CLASS}`)?.remove();
+      ourButtonsIn(card).forEach((button) => button.remove());
       return;
     }
 
@@ -585,7 +672,7 @@ async function notInterested(card) {
     };
 
     press(menu);
-    const item = await waitForNotInterestedItem(menu, preexisting);
+    const item = await waitForItem(menu, action, preexisting);
     if (!item) {
       closeMenus();
       return;

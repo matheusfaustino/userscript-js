@@ -63,13 +63,15 @@ dist/                  build output (gitignored)
   or auto-generated chapters. At the first chapter, previous replays it from
   the start; at the last chapter, next jumps to the end of the video.
   `@grant none`.
-- `youtube-not-interested` — a circular button in the top-left of each video
-  thumbnail on the home feed, search results, and the watch-page sidebar. On
-  click it opens that card's real menu and activates the localized
-  "Not interested" item (`NOT_INTERESTED` icon), so Shorts, ads, channels, and
-  playlists are skipped. The button fades in on thumbnail hover, never
-  navigates, and closes the menu if the item is missing after one second.
-  `@grant none`, no `@inject-into` — it only touches the DOM.
+- `youtube-thumbnail-actions` — circular buttons in the top-left corner of each
+  video thumbnail on the home feed, search results, and the watch-page sidebar.
+  On click either button opens that card's real menu and activates the matching
+  localized item so Shorts, ads, channels, and playlists are skipped. The
+  "Not interested" button runs the real feedback request (`NOT_INTERESTED`
+  icon); the button below it saves the video for later (`WATCH_LATER` icon).
+  The buttons fade in on thumbnail hover, never navigate, and close the menu if
+  the item is missing after one second. `@grant none`, no `@inject-into` — it
+  only touches the DOM.
 
 ## Userscript managers
 
