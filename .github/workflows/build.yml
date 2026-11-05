@@ -63,3 +63,9 @@ jobs:
             --title "Build ${GITHUB_SHA::7}" \
             --notes "Automated build of ${GITHUB_SHA}." \
             --prerelease
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest dist/*.user.js \
+            --target "$GITHUB_SHA" \
+            --title "Latest build" \
+            --notes "Latest automated build of the userscripts." \
+            --prerelease

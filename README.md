@@ -5,9 +5,10 @@ A small collection of userscripts that make YouTube a little nicer to use.
 ## Install
 
 1. Install the [Violentmonkey](https://violentmonkey.github.io/get-it/) browser extension.
-2. Download the `.user.js` file you want from the
-   [Releases page](../../releases) and open it. Violentmonkey will ask you to
-   confirm the install.
+2. Open the script you want. Violentmonkey will ask you to confirm the install:
+   - [YouTube thumbnail actions](https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-thumbnail-actions.user.js)
+   - [YouTube chapter nav](https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-chapter-nav.user.js)
+   - [YouTube speed control](https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-speed-control.user.js)
 3. That's it. Updates install the same way.
 
 > [!NOTE]
