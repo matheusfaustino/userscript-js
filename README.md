@@ -18,6 +18,8 @@ A small collection of userscripts that make YouTube a little nicer to use.
 
 ## Scripts
 
+Version history for each script lives in [CHANGELOG.md](CHANGELOG.md).
+
 ### YouTube thumbnail actions
 
 Two buttons that appear when you hover a video thumbnail, on the home feed,
