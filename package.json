@@ -2,7 +2,7 @@
   "name": "userscript-js",
   "version": "0.1.0",
   "private": true,
-  "description": "Build Tampermonkey userscripts with esbuild and test them in Playwright without installing Tampermonkey.",
+  "description": "A small collection of userscripts that make YouTube nicer to use.",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",

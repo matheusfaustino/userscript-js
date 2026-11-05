@@ -1,6 +1,6 @@
 /**
- * Checks the banner that ships in dist/demo.user.js and the @match evaluator
- * that decides whether a page is covered at all.
+ * Checks the banner that ships in dist/youtube-speed-control.user.js and the
+ * @match evaluator that decides whether a page is covered at all.
  */
 
 const path = require('node:path');
@@ -15,17 +15,17 @@ const {
 const { loadUserscript, matchUrl } = require('../testing');
 
 const ROOT = path.resolve(__dirname, '..');
-const BUILT = path.join(ROOT, 'dist', 'demo.user.js');
-const TEST_URL = 'https://demo.userscript.test/demo/page.html';
-const pkg = require('../package.json');
+const BUILT = path.join(ROOT, 'dist', 'youtube-speed-control.user.js');
 
 const script = loadUserscript(BUILT);
 
 test('the built banner parses into the fields the manager needs', () => {
-  expect(script.meta.name).toBe('userscript-js demo');
-  expect(script.meta.version).toBe(pkg.version);
+  expect(script.meta.name).toBe('YouTube speed control');
+  // The banner carries the version declared in userscript.config.js, which is
+  // not required to match package.json.
+  expect(script.meta.version).toBe('0.1.0');
   expect(script.meta['run-at']).toBe('document-end');
-  expect(script.meta.matches).toEqual(['*://*.userscript.test/demo/*']);
+  expect(script.meta.matches).toEqual(['*://*.youtube.com/*']);
   expect(script.meta.grants).toEqual([
     'GM_getValue',
     'GM_setValue',
@@ -98,13 +98,13 @@ test('@exclude wins over @match, and @include fills the gaps', () => {
   expect(matchesUrl(null, 'https://example.com/')).toBe(false);
 });
 
-test("the demo's @match covers the fixture URL and rejects off-target pages", () => {
-  expect(matchUrl(script.meta, TEST_URL)).toBe(true);
-  expect(matchUrl(script.meta, 'https://demo.userscript.test/demo/')).toBe(true);
-  expect(matchUrl(script.meta, 'https://example.com/demo/page.html')).toBe(false);
-  expect(matchUrl(script.meta, 'https://demo.userscript.test/')).toBe(false);
+test("the speed-control script's @match covers YouTube pages and rejects off-target ones", () => {
+  expect(matchUrl(script.meta, 'https://www.youtube.com/watch?v=abc')).toBe(true);
+  expect(matchUrl(script.meta, 'https://music.youtube.com/')).toBe(true);
+  expect(matchUrl(script.meta, 'https://www.youtube.com.evil.test/watch')).toBe(false);
+  expect(matchUrl(script.meta, 'https://example.com/watch')).toBe(false);
 });
 
-test('the fixture file exists for the demo spec to serve', () => {
+test('the shared fixture file exists for the specs that serve plain HTML', () => {
   expect(fs.existsSync(path.join(ROOT, 'tests', 'fixtures', 'page.html'))).toBe(true);
 });

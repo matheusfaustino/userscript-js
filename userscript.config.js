@@ -7,25 +7,6 @@
 
 module.exports = [
   {
-    entry: 'src/userscripts/demo.js',
-    outfile: 'dist/demo.user.js',
-    meta: {
-      name: 'userscript-js demo',
-      namespace: 'https://github.com/matheusfaustino/userscript-js',
-      version: '0.1.0',
-      description: 'Counter widget used to exercise the shared build and Playwright harness.',
-      author: 'Matheus Faustino',
-      match: ['*://*.userscript.test/demo/*'],
-      grant: [
-        'GM_getValue',
-        'GM_setValue',
-        'GM_deleteValue',
-        'GM_registerMenuCommand',
-      ],
-      'run-at': 'document-end',
-    },
-  },
-  {
     // Video cards exist on the home feed, search results, and the watch-page
     // sidebar, and YouTube navigates between them without a reload.
     entry: 'src/userscripts/youtube-thumbnail-actions.js',

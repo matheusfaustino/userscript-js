@@ -10,9 +10,9 @@ const path = require('node:path');
 const { test, expect } = require('@playwright/test');
 const { injectAtStart, serveHtml } = require('../testing');
 
-const SCRIPT = path.join(__dirname, '..', 'dist', 'demo.user.js');
+const SCRIPT = path.join(__dirname, '..', 'dist', 'youtube-speed-control.user.js');
 const HTML = fs.readFileSync(path.join(__dirname, 'fixtures', 'page.html'), 'utf8');
-const URL = 'https://demo.userscript.test/demo/shim.html';
+const URL = 'https://www.youtube.com/shim.html';
 
 async function open(page) {
   await serveHtml(page, HTML, URL);
