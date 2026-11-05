@@ -32,6 +32,10 @@ test('the built banner parses into the fields the manager needs', () => {
     'GM_deleteValue',
     'GM_registerMenuCommand',
   ]);
+  expect(script.meta.updateURL).toBe(
+    'https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-speed-control.user.js',
+  );
+  expect(script.meta.downloadURL).toBe(script.meta.updateURL);
   expect(script.source.startsWith('// ==UserScript==')).toBe(true);
 });
 

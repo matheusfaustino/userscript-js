@@ -12,6 +12,10 @@ module.exports = [
     entry: 'src/userscripts/youtube-thumbnail-actions.js',
     outfile: 'dist/youtube-thumbnail-actions.user.js',
     meta: {
+      updateURL:
+        'https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-thumbnail-actions.user.js',
+      downloadURL:
+        'https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-thumbnail-actions.user.js',
       name: 'YouTube thumbnail actions',
       namespace: 'https://github.com/matheusfaustino/userscript-js',
       version: '0.2.0',
@@ -29,6 +33,10 @@ module.exports = [
     entry: 'src/userscripts/youtube-chapter-nav.js',
     outfile: 'dist/youtube-chapter-nav.user.js',
     meta: {
+      updateURL:
+        'https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-chapter-nav.user.js',
+      downloadURL:
+        'https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-chapter-nav.user.js',
       name: 'YouTube chapter navigation',
       namespace: 'https://github.com/matheusfaustino/userscript-js',
       version: '0.2.0',
@@ -50,6 +58,10 @@ module.exports = [
     entry: 'src/userscripts/youtube-speed-control.js',
     outfile: 'dist/youtube-speed-control.user.js',
     meta: {
+      updateURL:
+        'https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-speed-control.user.js',
+      downloadURL:
+        'https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-speed-control.user.js',
       name: 'YouTube speed control',
       namespace: 'https://github.com/matheusfaustino/userscript-js',
       version: '0.1.0',
