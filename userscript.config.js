@@ -26,6 +26,23 @@ module.exports = [
     },
   },
   {
+    // Video cards exist on the home feed, search results, and the watch-page
+    // sidebar, and YouTube navigates between them without a reload.
+    entry: 'src/userscripts/youtube-not-interested.js',
+    outfile: 'dist/youtube-not-interested.user.js',
+    meta: {
+      name: 'YouTube not interested shortcut',
+      namespace: 'https://github.com/matheusfaustino/userscript-js',
+      version: '0.1.0',
+      description:
+        'Hover a Not interested button on YouTube video thumbnails to run the card\'s real action.',
+      author: 'Matheus Faustino',
+      match: ['*://*.youtube.com/*'],
+      grant: 'none',
+      'run-at': 'document-end',
+    },
+  },
+  {
     // The match covers every YouTube page because SPA navigation into a watch
     // page does not re-run the userscript; the script only mounts on /watch.
     entry: 'src/userscripts/youtube-chapter-nav.js',

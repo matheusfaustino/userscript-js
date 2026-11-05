@@ -63,6 +63,13 @@ dist/                  build output (gitignored)
   or auto-generated chapters. At the first chapter, previous replays it from
   the start; at the last chapter, next jumps to the end of the video.
   `@grant none`.
+- `youtube-not-interested` — a circular button in the top-left of each video
+  thumbnail on the home feed, search results, and the watch-page sidebar. On
+  click it opens that card's real menu and activates the localized
+  "Not interested" item (`NOT_INTERESTED` icon), so Shorts, ads, channels, and
+  playlists are skipped. The button fades in on thumbnail hover, never
+  navigates, and closes the menu if the item is missing after one second.
+  `@grant none`, no `@inject-into` — it only touches the DOM.
 
 ## Userscript managers
 

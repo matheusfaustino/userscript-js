@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>Not interested — YouTube fixture</title>
+    <style>
+      body { margin: 0; background: #0f0f0f; color: #f1f1f1; font: 14px system-ui, sans-serif; }
+      ytd-app, ytd-browse, ytd-watch-flexy, ytd-rich-item-renderer,
+      ytd-compact-video-renderer, ytd-thumbnail, a#thumbnail, ytd-menu-renderer,
+      yt-icon-button, ytd-menu-popup-renderer, ytd-menu-service-item-renderer,
+      ytd-playlist-renderer, ytd-channel-renderer, yt-lockup-view-model { display: block; }
+      yt-thumbnail-view-model, .ytLockupViewModelContentImage,
+      yt-sheet-view-model, yt-list-item-view-model,
+      button-view-model { display: block; }
+      ytd-popup-container { display: block; }
+      #home { display: flex; gap: 16px; padding: 16px; flex-wrap: wrap; }
+      ytd-rich-item-renderer { width: 320px; }
+      ytd-rich-item-renderer ytd-thumbnail,
+      ytd-rich-item-renderer a#thumbnail,
+      yt-lockup-view-model ytd-thumbnail,
+      yt-lockup-view-model a#thumbnail { width: 320px; height: 180px; background: #333; position: relative; }
+      yt-thumbnail-view-model, a.ytLockupViewModelContentImage {
+        width: 320px; height: 180px; background: #333; position: relative;
+      }
+      #video-title { display: block; color: #f1f1f1; text-decoration: none; margin-top: 8px; }
+      ytd-menu-renderer, yt-icon-button { margin-top: 8px; }
+      #sidebar { display: flex; flex-direction: column; gap: 12px; padding: 16px; width: 420px; }
+      ytd-compact-video-renderer { display: flex; gap: 8px; }
+      ytd-compact-video-renderer ytd-thumbnail,
+      ytd-compact-video-renderer a#thumbnail { width: 168px; height: 94px; background: #333; flex: none; position: relative; }
+      #menu { margin-top: 0; }
+      ytd-menu-popup-renderer {
+        position: fixed;
+        top: 80px;
+        left: 600px;
+        width: 260px;
+        padding: 8px;
+        background: #212121;
+        border-radius: 8px;
+        z-index: 9000;
+      }
+      .menu-item { display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 8px; cursor: pointer; }
+      .menu-item:hover { background: #303030; }
+      yt-icon { width: 24px; height: 24px; flex: none; }
+      yt-icon svg { display: block; width: 24px; height: 24px; fill: #fff; }
+    </style>
+  </head>
+  <body>
+    <ytd-app>
+      <ytd-browse>
+        <div id="home">
+          <ytd-rich-item-renderer id="card-home" data-video-id="vid-home">
+            <a id="thumbnail" href="/watch?v=vid-home">
+              <ytd-thumbnail></ytd-thumbnail>
+            </a>
+            <a id="video-title" href="/watch?v=vid-home">Home video</a>
+            <ytd-menu-renderer>
+              <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+            </ytd-menu-renderer>
+          </ytd-rich-item-renderer>
+
+          <ytd-rich-item-renderer id="card-shorts" data-video-id="short-1">
+            <a id="thumbnail" href="/shorts/short-1">
+              <ytd-thumbnail></ytd-thumbnail>
+            </a>
+            <a id="video-title" href="/shorts/short-1">A Short</a>
+            <ytd-menu-renderer>
+              <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+            </ytd-menu-renderer>
+          </ytd-rich-item-renderer>
+
+          <ytd-rich-item-renderer id="card-ad" data-video-id="ad-video">
+            <ytd-ad-slot-renderer>
+              <a id="thumbnail" href="/watch?v=ad-video">
+                <ytd-thumbnail></ytd-thumbnail>
+              </a>
+              <a id="video-title" href="/watch?v=ad-video">Promoted video</a>
+            </ytd-ad-slot-renderer>
+            <ytd-menu-renderer>
+              <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+            </ytd-menu-renderer>
+          </ytd-rich-item-renderer>
+
+          <ytd-rich-item-renderer id="card-playlist" data-video-id="playlist-1">
+            <ytd-playlist-renderer>
+              <a id="thumbnail" href="/watch?v=vid-in-playlist&list=PL123">
+                <ytd-thumbnail></ytd-thumbnail>
+              </a>
+              <a id="video-title" href="/playlist?list=PL123">A playlist</a>
+            </ytd-playlist-renderer>
+            <ytd-menu-renderer>
+              <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+            </ytd-menu-renderer>
+          </ytd-rich-item-renderer>
+
+          <ytd-rich-item-renderer id="card-channel" data-video-id="channel-1">
+            <ytd-channel-renderer>
+              <a id="thumbnail" href="/@somechannel">
+                <ytd-thumbnail></ytd-thumbnail>
+              </a>
+              <a id="video-title" href="/@somechannel">A channel</a>
+            </ytd-channel-renderer>
+            <ytd-menu-renderer>
+              <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+            </ytd-menu-renderer>
+          </ytd-rich-item-renderer>
+
+          <yt-lockup-view-model id="card-lockup" data-video-id="vid-lockup">
+            <a id="thumbnail" href="/watch?v=vid-lockup">
+              <ytd-thumbnail></ytd-thumbnail>
+            </a>
+            <a id="video-title" href="/watch?v=vid-lockup">Lockup video</a>
+            <ytd-menu-renderer>
+              <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+            </ytd-menu-renderer>
+          </yt-lockup-view-model>
+
+          <ytd-rich-item-renderer id="card-new-ui" data-video-id="vid-new-ui">
+            <div id="content">
+              <yt-lockup-view-model class="lockup ytLockupViewModelWrapper">
+                <div class="ytLockupViewModelHost ytLockupViewModelVertical">
+                  <a class="ytLockupViewModelContentImage" href="/watch?v=vid-new-ui" tabindex="-1">
+                    <yt-thumbnail-view-model class="ytThumbnailViewModelHost">
+                      <div class="ytThumbnailViewModelImage"></div>
+                    </yt-thumbnail-view-model>
+                  </a>
+                  <div class="ytLockupViewModelMetadata">
+                    <yt-lockup-metadata-view-model>
+                      <div class="ytLockupMetadataViewModelMenuButton">
+                        <button-view-model>
+                          <button aria-label="More actions">⋮</button>
+                        </button-view-model>
+                      </div>
+                    </yt-lockup-metadata-view-model>
+                  </div>
+                </div>
+              </yt-lockup-view-model>
+            </div>
+            <a id="video-title" href="/watch?v=vid-new-ui">New UI video</a>
+          </ytd-rich-item-renderer>
+        </div>
+      </ytd-browse>
+
+      <ytd-watch-flexy>
+        <div id="sidebar">
+          <ytd-compact-video-renderer id="card-sidebar" data-video-id="vid-sidebar">
+            <a id="thumbnail" href="/watch?v=vid-sidebar">
+              <ytd-thumbnail></ytd-thumbnail>
+            </a>
+            <div>
+              <a id="video-title" href="/watch?v=vid-sidebar">Sidebar video</a>
+              <div id="menu">
+                <ytd-menu-renderer>
+                  <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+                </ytd-menu-renderer>
+              </div>
+            </div>
+          </ytd-compact-video-renderer>
+
+          <ytd-compact-video-renderer id="card-sidebar-2" data-video-id="vid-sidebar-2">
+            <a id="thumbnail" href="/watch?v=vid-sidebar-2">
+              <ytd-thumbnail></ytd-thumbnail>
+            </a>
+            <div>
+              <a id="video-title" href="/watch?v=vid-sidebar-2">Sidebar video without feedback</a>
+              <div id="menu">
+                <ytd-menu-renderer>
+                  <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+                </ytd-menu-renderer>
+              </div>
+            </div>
+          </ytd-compact-video-renderer>
+
+          <ytd-compact-video-renderer id="card-doc" data-video-id="vid-doc">
+            <a id="thumbnail" href="/watch?v=vid-doc">
+              <ytd-thumbnail></ytd-thumbnail>
+            </a>
+            <div>
+              <a id="video-title" href="/watch?v=vid-doc">Sidebar video, document-level menu</a>
+              <div id="menu">
+                <ytd-menu-renderer>
+                  <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+                </ytd-menu-renderer>
+              </div>
+            </div>
+          </ytd-compact-video-renderer>
+        </div>
+      </ytd-watch-flexy>
+    </ytd-app>
+
+    <ytd-popup-container id="doc-popups"></ytd-popup-container>
+
+    <script>
+      // Stands in for YouTube's card menu: the button opens a popup after a
+      // short delay, and item clicks record which card was acted on. Labels are
+      // Portuguese on purpose; the script must find the item by icon.
+      const CLOCK_PATH =
+        'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z';
+      const PERSON_PATH =
+        'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z';
+      const NOT_INTERESTED_PATH =
+        'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM4 12c0-4.42 3.58-8 8-8 1.85 0 3.55.63 4.9 1.69L5.69 16.9C4.63 15.55 4 13.85 4 12zm8 8c-1.85 0-3.55-.63-4.9-1.69L18.31 7.1C19.37 8.45 20 10.15 20 12c0 4.42-3.58 8-8 8z';
+
+      window.__menuOpens = [];
+      window.__notInterested = [];
+
+      const MENUS = {
+        'vid-home': [
+          { iconType: 'WATCH_LATER', label: 'Salvar para assistir mais tarde', path: CLOCK_PATH },
+          {
+            // Shares the Not interested glyph and uses the direct data shape;
+            // the explicit type must win over the path.
+            iconType: 'BLOCK',
+            label: 'Bloquear usuário',
+            path: NOT_INTERESTED_PATH,
+            direct: true,
+          },
+          {
+            iconType: 'NOT_INTERESTED',
+            label: 'Não tenho interesse',
+            path: NOT_INTERESTED_PATH,
+            action: 'not-interested',
+          },
+          {
+            iconType: 'DONT_RECOMMEND_CHANNEL',
+            label: 'Não recomendar este canal',
+            path: PERSON_PATH,
+          },
+        ],
+        'vid-sidebar': [
+          // No iconType: only the rendered path marks this item.
+          { label: 'Salvar para assistir mais tarde', path: CLOCK_PATH },
+          {
+            label: 'Não tenho interesse',
+            path: NOT_INTERESTED_PATH,
+            action: 'not-interested',
+          },
+        ],
+        'vid-sidebar-2': [
+          { iconType: 'WATCH_LATER', label: 'Salvar para assistir mais tarde', path: CLOCK_PATH },
+          { iconType: 'DONT_RECOMMEND_CHANNEL', label: 'Não recomendar este canal', path: PERSON_PATH },
+        ],
+        'vid-doc': [
+          {
+            iconType: 'NOT_INTERESTED',
+            label: 'Não tenho interesse',
+            path: NOT_INTERESTED_PATH,
+            action: 'not-interested',
+            // Live YouTube renders the sheet at document level (ytd-popup-container),
+            // not inside the card — exercises the document-wide fallback.
+            docPopup: true,
+          },
+        ],
+        'vid-lockup': [
+          {
+            iconType: 'NOT_INTERESTED',
+            label: 'Não tenho interesse',
+            path: NOT_INTERESTED_PATH,
+            action: 'not-interested',
+          },
+        ],
+        'vid-new-ui': [
+          {
+            label: 'Não tenho interesse',
+            path: NOT_INTERESTED_PATH,
+            action: 'not-interested',
+            sheet: true,
+          },
+        ],
+      };
+
+      function closeMenu() {
+        for (const popup of document.querySelectorAll(
+          'ytd-menu-popup-renderer, yt-sheet-view-model',
+        )) {
+          popup.remove();
+        }
+      }
+
+      function buildItem(card, spec) {
+        // New UI items render as list view models with the icon nested under
+        // leadingImage.sources[].clientResource, like the live sheet menu.
+        if (spec.sheet) {
+          const item = document.createElement('yt-list-item-view-model');
+          item.className = 'menu-item';
+          item.data = {
+            listItemViewModel: {
+              title: { content: spec.label },
+              leadingImage: { sources: [{ clientResource: { imageName: 'HIDE' } }] },
+            },
+          };
+
+          const icon = document.createElement('yt-icon');
+          icon.innerHTML = `<svg viewBox="0 0 24 24"><path d="${spec.path}"></path></svg>`;
+          const label = document.createElement('yt-formatted-string');
+          label.textContent = spec.label;
+          item.append(icon, label);
+
+          item.addEventListener('click', () => {
+            if (spec.action === 'not-interested') {
+              window.__notInterested.push(card.dataset.videoId);
+            }
+            closeMenu();
+          });
+          return item;
+        }
+
+        const item = document.createElement('ytd-menu-service-item-renderer');
+        item.className = 'menu-item';
+        if (spec.iconType) {
+          item.data = spec.direct
+            ? { icon: { iconType: spec.iconType } }
+            : { menuServiceItemRenderer: { icon: { iconType: spec.iconType } } };
+        }
+
+        const icon = document.createElement('yt-icon');
+        icon.innerHTML = `<svg viewBox="0 0 24 24"><path d="${spec.path}"></path></svg>`;
+        const label = document.createElement('yt-formatted-string');
+        label.textContent = spec.label;
+        item.append(icon, label);
+
+        item.addEventListener('click', () => {
+          if (spec.action === 'not-interested') {
+            window.__notInterested.push(card.dataset.videoId);
+          }
+          closeMenu();
+        });
+        return item;
+      }
+
+      // Menus are not closed when another one opens: two popups can coexist on
+      // screen (the state a user creates by opening one card's menu and then
+      // clicking another card), and the script must never read the wrong one.
+      function openMenu(card) {
+        const items = MENUS[card.dataset.videoId];
+        if (!items) return;
+        window.__menuOpens.push(card.dataset.videoId);
+
+        const sheet = items.some((spec) => spec.sheet);
+        const popup = document.createElement(
+          sheet ? 'yt-sheet-view-model' : 'ytd-menu-popup-renderer',
+        );
+        const list = document.createElement('div');
+        list.id = 'items';
+        for (const spec of items) list.append(buildItem(card, spec));
+        popup.append(list);
+
+        // YouTube renders the popup inside the card's menu renderer after the
+        // click, not synchronously — except document-level sheets, which live
+        // in ytd-popup-container at body level like the live UI.
+        const docLevel = items.some((entry) => entry.docPopup);
+        const renderer = docLevel
+          ? document.getElementById('doc-popups')
+          : (card.querySelector('ytd-menu-renderer') ??
+            card.querySelector('button-view-model') ??
+            card);
+        window.setTimeout(() => {
+          if (!document.body.contains(popup)) renderer.append(popup);
+        }, 30);
+      }
+
+      function wireMenuButton(button) {
+        button.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          // Prefer the card carrying the video id: new-UI cards nest a
+          // yt-lockup-view-model (no id) inside ytd-rich-item-renderer.
+          const card = button.closest('[data-video-id]');
+          openMenu(card);
+        });
+      }
+
+      for (const button of document.querySelectorAll(
+        'ytd-menu-renderer #button, button-view-model button',
+      )) {
+        wireMenuButton(button);
+      }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') closeMenu();
+      });
+
+      // SPA helper: add one more sidebar card after load, then the test fires
+      // yt-navigate-finish the way YouTube does.
+      window.addSidebarCard = (id) => {
+        MENUS[id] = [
+          {
+            iconType: 'NOT_INTERESTED',
+            label: 'Não tenho interesse',
+            path: NOT_INTERESTED_PATH,
+            action: 'not-interested',
+          },
+        ];
+        const card = document.createElement('ytd-compact-video-renderer');
+        card.id = `card-${id}`;
+        card.dataset.videoId = id;
+        card.innerHTML = `
+          <a id="thumbnail" href="/watch?v=${id}"><ytd-thumbnail></ytd-thumbnail></a>
+          <div>
+            <a id="video-title" href="/watch?v=${id}">SPA video</a>
+            <div id="menu">
+              <ytd-menu-renderer>
+                <yt-icon-button id="button" aria-label="Menu de ações">⋮</yt-icon-button>
+              </ytd-menu-renderer>
+            </div>
+          </div>`;
+        document.getElementById('sidebar').append(card);
+        wireMenuButton(card.querySelector('ytd-menu-renderer #button'));
+      };
+    </script>
+  </body>
+</html>
