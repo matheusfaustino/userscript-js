@@ -39,6 +39,10 @@ update when `@version` moves.
 
 ## YouTube speed control
 
+### 0.2.0 — 2026-11-17
+
+- Remember playback speed separately for each channel, defaulting to 1x.
+
 ### 0.1.0 — 2026-11-05
 
 - First release: a speed chip on the player with slower/faster buttons, a 1x

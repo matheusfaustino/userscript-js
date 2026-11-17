@@ -54,7 +54,7 @@ module.exports = [
   {
     // The chip belongs to whatever player is on screen, so the script mounts on
     // every YouTube surface that has one (watch, Shorts, embeds, miniplayer)
-    // and only needs DOM access, not YouTube's page objects.
+    // and uses the player's video details to identify its channel.
     entry: 'src/userscripts/youtube-speed-control.js',
     outfile: 'dist/youtube-speed-control.user.js',
     meta: {
@@ -64,7 +64,7 @@ module.exports = [
         'https://github.com/matheusfaustino/userscript-js/releases/download/latest/youtube-speed-control.user.js',
       name: 'YouTube speed control',
       namespace: 'https://github.com/matheusfaustino/userscript-js',
-      version: '0.1.0',
+      version: '0.2.0',
       description: 'Playback speed chip for the YouTube player with buttons, keys, and shift+wheel.',
       author: 'Matheus Faustino',
       match: ['*://*.youtube.com/*'],

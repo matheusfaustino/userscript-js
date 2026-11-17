@@ -27,7 +27,7 @@ const CHIP_ID = 'usj-speed-control';
 const STYLE_ID = 'usj-speed-control-style';
 const VISIBLE_CLASS = 'usj-speed-control--visible';
 
-const RATE_KEY = 'youtube-speed-control:rate';
+const RATE_KEY = 'youtube-speed-control:channel:';
 const INVERT_KEY = 'youtube-speed-control:invert-wheel';
 const FADE_KEY = 'youtube-speed-control:fade-on-hover';
 
@@ -39,7 +39,8 @@ const DEFAULT_RATE = 1;
 /** A rate YouTube itself applies (0.25 steps, 0.25-2x) must win over ours. */
 const RATE_EPSILON = 0.001;
 
-const rateStore = createStore(RATE_KEY, DEFAULT_RATE);
+let channelId = null;
+let currentVideoId = null;
 const invertStore = createStore(INVERT_KEY, false);
 const fadeStore = createStore(FADE_KEY, true);
 
@@ -119,7 +120,7 @@ let revealTimer = 0;
 let pointerInPlayer = false;
 let applying = false;
 
-let rate = clampRate(rateStore.get(DEFAULT_RATE));
+let rate = DEFAULT_RATE;
 let lastRate = rate === DEFAULT_RATE ? DEFAULT_RATE : rate;
 
 /**
@@ -256,7 +257,7 @@ function setRate(value) {
   const changed = next !== rate;
   rate = next;
   if (next !== DEFAULT_RATE) lastRate = next;
-  rateStore.set(rate);
+  if (channelId) createStore(RATE_KEY + channelId).set(rate);
   if (changed) applyRate();
   updateChip();
   reveal();
@@ -296,7 +297,7 @@ function onRateChange() {
   if (Math.abs(actual - rate) < RATE_EPSILON) return;
   rate = actual;
   if (actual !== DEFAULT_RATE) lastRate = actual;
-  rateStore.set(rate);
+  if (channelId) createStore(RATE_KEY + channelId).set(rate);
   updateChip();
 }
 
@@ -360,6 +361,20 @@ function teardown() {
   video = null;
 }
 
+function refreshChannel() {
+  const details = player?.getPlayerResponse?.()?.videoDetails;
+  const url = new URL(location.href);
+  const videoId = url.searchParams.get('v') || url.pathname.match(/^\/(?:shorts|embed)\/([^/]+)/)?.[1];
+  // The player may still expose the previous video during navigation.
+  const nextChannel = details?.videoId === videoId ? details?.channelId : null;
+  if (videoId === currentVideoId && nextChannel === channelId) return;
+  currentVideoId = videoId;
+  channelId = nextChannel || null;
+  const saved = channelId ? Number(createStore(RATE_KEY + channelId).get(DEFAULT_RATE)) : DEFAULT_RATE;
+  rate = Number.isFinite(saved) && saved >= MIN_RATE && saved <= MAX_RATE ? saved : DEFAULT_RATE;
+  lastRate = rate;
+}
+
 function refresh() {
   const nextPlayer = findPlayer();
   if (!nextPlayer) {
@@ -374,6 +389,7 @@ function refresh() {
     observePlayer();
   }
 
+  refreshChannel();
   bindVideo();
   if (!video) {
     teardownChip();

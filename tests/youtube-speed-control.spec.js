@@ -13,9 +13,10 @@ const { injectAfterLoad, loadUserscript, matchUrl, serveHtml } = require('../tes
 
 const ROOT = path.resolve(__dirname, '..');
 const BUILT = path.join(ROOT, 'dist', 'youtube-speed-control.user.js');
-const WATCH_HTML = fs.readFileSync(path.join(__dirname, 'fixtures', 'youtube-watch.html'), 'utf8');
+const WATCH_HTML = fs.readFileSync(path.join(__dirname, 'fixtures', 'youtube-watch.html'), 'utf8')
+  .replace('player.getPlayerResponse = () => ({});', `player.getPlayerResponse = () => ({ videoDetails: { videoId: new URL(location.href).searchParams.get('v'), channelId: window.__channel || 'channel-a' } });`);
 const WATCH_URL = 'https://www.youtube.com/watch?v=speed-test';
-const RATE_KEY = 'youtube-speed-control:rate';
+const RATE_KEY = 'youtube-speed-control:channel:channel-a';
 
 const chip = (page) => page.locator('#usj-speed-control');
 const display = (page) => chip(page).locator('[data-action="toggle"]');
@@ -344,4 +345,16 @@ test('adopts a rate chosen outside the chip instead of overwriting it on play', 
   await expect.poll(() => videoRate(page)).toBe(1.5);
   await expect(display(page)).toHaveText('1.5x');
   expect(await page.evaluate((key) => GM_getValue(key), RATE_KEY)).toBe('1.5');
+});
+
+test('remembers speeds separately for channels during navigation', async ({ page }) => {
+  await openWatchPage(page);
+  await faster(page).click();
+  await page.evaluate(() => { window.__channel = 'channel-b'; history.pushState({}, '', '/watch?v=other'); document.dispatchEvent(new Event('yt-navigate-finish')); });
+  await expect(display(page)).toHaveText('1x');
+  await faster(page).click();
+  await faster(page).click();
+  await page.evaluate(() => { window.__channel = 'channel-a'; history.pushState({}, '', '/watch?v=another'); document.dispatchEvent(new Event('yt-navigate-finish')); });
+  await expect(display(page)).toHaveText('1.25x');
+  await expect.poll(() => videoRate(page)).toBe(1.25);
 });
