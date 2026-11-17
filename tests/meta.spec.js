@@ -23,7 +23,7 @@ test('the built banner parses into the fields the manager needs', () => {
   expect(script.meta.name).toBe('YouTube speed control');
   // The banner carries the version declared in userscript.config.js, which is
   // not required to match package.json.
-  expect(script.meta.version).toBe('0.1.0');
+  expect(script.meta.version).toBe('0.2.0');
   expect(script.meta['run-at']).toBe('document-end');
   expect(script.meta.matches).toEqual(['*://*.youtube.com/*']);
   expect(script.meta.grants).toEqual([
